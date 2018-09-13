@@ -14,8 +14,7 @@ def get_title(page_source):
     start =  title_head.find("</a>") + 5
     chapter = title_head[start:]
 
-    print(title)
-    print(chapter)
+    return (title, chapter + "\n")
 
 def get_content(page_source):
     start = page_source.find('<div class="chapter-content-p">') + 31
@@ -24,22 +23,30 @@ def get_content(page_source):
     content = remove_tags(page_source[start:start+end])
     content = recover_grammar(content)
 
-    print(content)
+    return content
 
 def get_next_page(page_source):
-    start = page_source.find('<div class="chap-select">') + 25
+    start = page_source.find('<select name="chapterz" class="chapterz">') + 41
     start = page_source[start:].find('<a href="') + start + 9
     end = page_source[start:].find('"')
 
-    print(page_source[start:start+end])
+    return page_source[start:start+end]
 
 def remove_tags(text):
-    TAG_RE = re.compile(r'<[^>]+>')
-    return TAG_RE.sub('', text)
+    tag_re = re.compile(r'<[^>]+>')
+    break_re = re.compile(r'(<br/>|<br />)')
+    newline_re = re.compile(r'\n')
+    text = newline_re.sub("", text)
+    text = break_re.sub("\n", text)
+    return tag_re.sub('', text)
 
 def recover_grammar(text):
-    TAG_RE = re.compile(r'&#39;')
-    return TAG_RE.sub("'", text)
+    squote_re = re.compile(r'(&#39;|&#039;)')
+    dquote_re = re.compile(r'&quot;')
+    space_re = re.compile(r'&nbsp;')
+    text = squote_re.sub("'", text)
+    text = dquote_re.sub('"', text)
+    return space_re.sub(" ", text)
 
 def main():
     url = "http://1novels.com/"
@@ -48,13 +55,23 @@ def main():
     user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
     headers = {'User-Agent': user_agent}
 
-    req = urllib.request.Request(url + url_ext, None, headers)
+    book = open("test.txt", "w")
 
-    with urllib.request.urlopen(req) as response:
-        page_source = response.read().decode('utf-8')
-        get_title(page_source)
-        get_content(page_source)
-        get_next_page(page_source)
+    while(url_ext != url[:-1]):
+        req = urllib.request.Request(url + url_ext, None, headers)
+        with urllib.request.urlopen(req) as response:
+            page_source = response.read().decode('utf-8', "ignore")
+            title = get_title(page_source)
+            book.write(title[0] + "\n\n")
+            book.write(title[1])
+
+            content = get_content(page_source)
+            book.write(content)
+
+            url_ext = get_next_page(page_source)
+            print(url_ext)
+
+    book.close()
 
 if __name__ == '__main__':
     main()
