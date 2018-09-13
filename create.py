@@ -1,5 +1,5 @@
 import urllib.request, shutil, os, time
-import re
+import re, sys
 
 def get_title(page_source):
     start = page_source.find('<h3 class="title">') + 18
@@ -41,27 +41,37 @@ def remove_tags(text):
     return tag_re.sub('', text)
 
 def recover_grammar(text):
-    squote_re = re.compile(r'(&#39;|&#039;)')
-    dquote_re = re.compile(r'&quot;')
+    squote_re = re.compile(r'(&#39;|&#039;|&lsquo;|&rsquo;)')
+    dquote_re = re.compile(r'(&quot;|&ldquo;|&rdquo;)')
     space_re = re.compile(r'&nbsp;')
+    elp_re = re.compile(r'&hellip;')
+    mdash_re = re.compile(r'&mdash;')
     text = squote_re.sub("'", text)
     text = dquote_re.sub('"', text)
+    text = elp_re.sub('...', text)
+    text = mdash_re.sub('—', text)
     return space_re.sub(" ", text)
 
 def main():
+    if len(sys.argv) != 2:
+        print("USAGE: {} <end url>".format(sys.argv[0]))
+        return
+
     url = "http://1novels.com/"
-    url_ext = "241255-demon-thief.html"
+    url_ext = sys.argv[1]
 
     user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
     headers = {'User-Agent': user_agent}
 
-    book = open("test.txt", "w")
+    book = None
 
     while(url_ext != url[:-1]):
         req = urllib.request.Request(url + url_ext, None, headers)
         with urllib.request.urlopen(req) as response:
             page_source = response.read().decode('utf-8', "ignore")
             title = get_title(page_source)
+            if book is None:
+                book = open(title[0] + ".txt", "w", encoding="utf-8")
             book.write(title[0] + "\n\n")
             book.write(title[1])
 
