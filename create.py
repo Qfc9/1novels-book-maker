@@ -1,5 +1,6 @@
 import urllib.request, shutil, os, time
 import re, sys
+from tkinter import *
 
 def get_title(page_source):
     start = page_source.find('<h3 class="title">') + 18
@@ -52,13 +53,13 @@ def recover_grammar(text):
     text = mdash_re.sub('—', text)
     return space_re.sub(" ", text)
 
-def main():
-    if len(sys.argv) != 2:
-        print("USAGE: {} <end url>".format(sys.argv[0]))
-        return
-
+def download_book(url_ext, label):
     url = "http://1novels.com/"
-    url_ext = sys.argv[1]
+    if url_ext.find(url) == -1:
+        label.delete("1.0", END)
+        label.insert(INSERT,"Invalid URL!!!")
+        return
+    url_ext = url_ext.replace(url, "")
 
     user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
     headers = {'User-Agent': user_agent}
@@ -82,6 +83,21 @@ def main():
             print(url_ext)
 
     book.close()
+    label.delete("1.0", END)
+    label.insert(INSERT,"Downloaded!!!")
+
+def main():
+    master = Tk()
+    master.title("1Novels Book Creator")
+    Label(master, text="1Novels Book URL:").grid(row=0)
+    t = Text(master, height=1, width=20)
+    t.grid(row=1)
+
+    e1 = Entry(master, width=50)
+    e1.grid(row=0, column=1, pady=5)
+
+    Button(master, text='Download Book', command= lambda: download_book(e1.get(), t)).grid(row=1, column=1, pady=4)
+    master.mainloop()
 
 if __name__ == '__main__':
     main()
