@@ -19,7 +19,9 @@ def get_title(page_source):
 
 def get_content(page_source):
     start = page_source.find('<div class="chapter-content-p">') + 31
-    end = page_source[start:].find('</div>')
+    # end = page_source[start:].find('</div>')
+    end = page_source[start:].find('<div class="chap-select">')
+    # end = page_source[start:].find('<script src="/netads/autoads.js"></script>')
 
     content = remove_tags(page_source[start:start+end])
     content = recover_grammar(content)
@@ -72,7 +74,7 @@ def download_book(url_ext, label):
             page_source = response.read().decode('utf-8', "ignore")
             title = get_title(page_source)
             if book is None:
-                book = open(title[0] + ".txt", "w", encoding="utf-8")
+                book = open("G:\\documents\\" + title[0] + ".txt", "w", encoding="utf-8")
             book.write(title[0] + "\n\n")
             book.write(title[1])
 
